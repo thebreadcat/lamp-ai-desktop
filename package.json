@@ -1,0 +1,68 @@
+{
+  "name": "lamp-desktop",
+  "version": "0.1.0",
+  "description": "Desktop launcher for Lamp AI — macOS, Windows, Linux",
+  "author": "thebreadcat",
+  "license": "SEE LICENSE IN LICENSE",
+  "private": true,
+  "main": "electron/main.js",
+  "scripts": {
+    "ensure-lamp": "python3 scripts/ensure-lamp.py",
+    "dev": "node scripts/dev.mjs",
+    "start": "electron .",
+    "build": "npm run ensure-lamp && electron-builder",
+    "build:mac": "npm run ensure-lamp && electron-builder --mac",
+    "build:win": "npm run ensure-lamp && electron-builder --win",
+    "build:linux": "npm run ensure-lamp && electron-builder --linux",
+    "pack": "electron-builder --dir"
+  },
+  "devDependencies": {
+    "electron": "^35.0.0",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "ai.lamp.desktop",
+    "productName": "Lamp",
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "electron/**/*",
+      "scripts/**/*",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "lamp",
+        "to": "lamp",
+        "filter": [
+          "**/*",
+          "!**/.git/**",
+          "!**/.git"
+        ]
+      }
+    ],
+    "mac": {
+      "category": "public.app-category.productivity",
+      "target": ["dmg", "zip"],
+      "icon": "build/icon.icns"
+    },
+    "win": {
+      "target": ["nsis"],
+      "icon": "build/icon.ico"
+    },
+    "linux": {
+      "target": ["AppImage", "deb"],
+      "category": "Utility",
+      "icon": "build/icons"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    },
+    "deb": {
+      "depends": ["python3 (>= 3.10)"]
+    }
+  }
+}
