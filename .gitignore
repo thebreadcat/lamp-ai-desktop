@@ -7,7 +7,12 @@ out/
 .env.*
 !.env.example
 lamp-desktop-data/
+resources/python/
+.cache/
+scripts/__pycache__/
+**/__pycache__/
 *.pem
 
-# Submodule is tracked; ignore only local overrides
-lamp/.workshop/
+# Staged copy for builds (from submodule, LAMP_PATH, or ../lamp)
+lamp/
+!lamp/.gitkeep

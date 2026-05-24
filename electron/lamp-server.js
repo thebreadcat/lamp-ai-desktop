@@ -2,6 +2,7 @@ const { spawn } = require("node:child_process");
 const fs = require("node:fs");
 const path = require("node:path");
 const http = require("node:http");
+const { pythonBin: resolvePython } = require("./python-runtime");
 
 const DEFAULT_PORT = 7700;
 
@@ -21,8 +22,8 @@ function lampRoot(app) {
   );
 }
 
-function pythonBin() {
-  return process.env.LAMP_PYTHON?.trim() || "python3";
+function pythonBin(app) {
+  return resolvePython(app);
 }
 
 function port() {
@@ -66,9 +67,15 @@ class LampServer {
     const root = lampRoot(this.app);
     const script = path.join(root, "lamp.py");
     const args = [script, "--host", "127.0.0.1", "--port", String(this._port)];
-    this.child = spawn(pythonBin(), args, {
+    const py = pythonBin(this.app);
+    const bundled = py.includes(`${path.sep}python${path.sep}`) || py.includes(`${path.sep}resources${path.sep}`);
+    this.child = spawn(py, args, {
       cwd: root,
-      env: { ...process.env, PYTHONUNBUFFERED: "1" },
+      env: {
+        ...process.env,
+        PYTHONUNBUFFERED: "1",
+        LAMP_BUNDLED_PYTHON: bundled ? "1" : "0",
+      },
       stdio: ["ignore", "pipe", "pipe"],
     });
     this.child.stdout?.on("data", (d) => process.stdout.write(`[lamp] ${d}`));
@@ -88,4 +95,4 @@ class LampServer {
   }
 }
 
-module.exports = { LampServer, port, lampRoot };
+module.exports = { LampServer, port, lampRoot, pythonBin };

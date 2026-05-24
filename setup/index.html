@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Setting up Lamp</title>
+  <link rel="stylesheet" href="/setup.css">
+</head>
+<body>
+  <div class="wrap">
+    <header class="hero">
+      <div class="logo" aria-hidden="true">💡</div>
+      <h1 id="title">Setting up Lamp</h1>
+      <p id="subtitle" class="lead">Installing everything you need. This runs once — grab a coffee if it's downloading the AI model.</p>
+    </header>
+
+    <div class="progress">
+      <div class="progress-bar"><div id="progressFill" class="progress-fill"></div></div>
+      <p id="progressLabel" class="progress-label">Starting…</p>
+    </div>
+
+    <ul id="stepList" class="step-list"></ul>
+    <div id="log" class="log" hidden></div>
+    <div id="help" class="help" hidden></div>
+  </div>
+  <script src="/setup.js"></script>
+</body>
+</html>

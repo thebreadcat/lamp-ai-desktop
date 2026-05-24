@@ -8,11 +8,14 @@ const {
 } = require("electron");
 const path = require("node:path");
 const { LampServer } = require("./lamp-server");
+const { SetupManager } = require("./setup-manager");
+const { runSetupWindow } = require("./setup-window");
 
 let mainWindow = null;
 let tray = null;
 let quitting = false;
 const lamp = new LampServer(app);
+const setup = new SetupManager(app);
 
 const gotLock = app.requestSingleInstanceLock();
 if (!gotLock) {
@@ -40,9 +43,13 @@ function buildTray() {
   const img = iconPath()
     ? nativeImage.createFromPath(iconPath())
     : nativeImage.createEmpty();
-  tray = new Tray(img.isEmpty() ? nativeImage.createFromDataURL(
-    "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=="
-  ) : img);
+  tray = new Tray(
+    img.isEmpty()
+      ? nativeImage.createFromDataURL(
+          "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=="
+        )
+      : img
+  );
   tray.setToolTip("Lamp");
   tray.setContextMenu(
     Menu.buildFromTemplate([
@@ -50,12 +57,26 @@ function buildTray() {
         label: "Open Lamp",
         click: () => {
           if (mainWindow) mainWindow.show();
-          else createWindow();
+          else createMainWindow();
         },
       },
       {
         label: "Open in browser",
-        click: () => shell.openExternal(lamp.baseUrl),
+        click: async () => {
+          const url = await lamp.start();
+          shell.openExternal(url);
+        },
+      },
+      { type: "separator" },
+      {
+        label: "Run setup again…",
+        click: async () => {
+          await setup.resetWizard();
+          await runSetupWindow(setup);
+          if (mainWindow) {
+            mainWindow.loadURL(await lamp.start());
+          }
+        },
       },
       { type: "separator" },
       {
@@ -72,7 +93,7 @@ function buildTray() {
   });
 }
 
-async function createWindow() {
+async function createMainWindow() {
   const url = await lamp.start();
   mainWindow = new BrowserWindow({
     width: 1280,
@@ -97,7 +118,10 @@ async function createWindow() {
     mainWindow = null;
   });
   mainWindow.webContents.setWindowOpenHandler(({ url: target }) => {
-    if (target.startsWith("http://127.0.0.1") || target.startsWith("http://localhost")) {
+    if (
+      target.startsWith("http://127.0.0.1") ||
+      target.startsWith("http://localhost")
+    ) {
       return { action: "allow" };
     }
     shell.openExternal(target);
@@ -107,9 +131,16 @@ async function createWindow() {
 
 app.whenReady().then(async () => {
   buildTray();
-  await createWindow();
+  try {
+    if (await setup.needsWizard()) {
+      await runSetupWindow(setup);
+    }
+  } catch (e) {
+    console.error("[setup] wizard failed:", e);
+  }
+  await createMainWindow();
   app.on("activate", () => {
-    if (BrowserWindow.getAllWindows().length === 0) createWindow();
+    if (BrowserWindow.getAllWindows().length === 0) createMainWindow();
     else if (mainWindow) mainWindow.show();
   });
 });
@@ -121,4 +152,5 @@ app.on("window-all-closed", () => {
 app.on("before-quit", () => {
   quitting = true;
   lamp.stop();
+  setup.stop();
 });

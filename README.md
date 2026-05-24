@@ -19,11 +19,20 @@ Lamp itself lives in a separate repo. This project vendors it as a **git submodu
 └─────────────────────────────────────┘
 ```
 
-You still need on the machine:
+### One-time automatic setup
 
-- **Python 3.10+**
-- **Git** (first clone / submodule update)
-- A local LLM (**Ollama** or LM Studio) — same as [Lamp QUICKSTART](https://github.com/thebreadcat/lamp/blob/main/QUICKSTART.md)
+On first launch, Lamp shows a **single progress screen** and installs everything automatically — no buttons to click:
+
+1. **Python** — bundled inside release builds (`npm run bundle-python`); dev uses system `python3`
+2. **Tortoise** — included in the packaged Lamp tree at build time
+3. **Ollama** — installed via official script (Mac/Linux) or winget (Windows), with retries
+4. **AI model** — downloads the best fit for your RAM (`qwen2.5:7b` / `3b` / `1.5b`), or uses one you already have
+5. **Config** — writes `~/.workshop/config.json` wired to Ollama
+6. **Voice** — Whisper/ffmpeg install **in the background** after Lamp opens (optional)
+
+If something can't be automated (rare), you'll see one clear message and a **Try again** button. **Run setup again…** in the tray menu re-runs the pipeline.
+
+**Release builds** (`npm run build:mac` etc.) bundle Python + Lamp + Tortoise so users don't install those separately. They still need Ollama (installed automatically on first run when possible).
 
 ## Publishing this repo (first time)
 
@@ -57,7 +66,9 @@ npm install
 npm run dev
 ```
 
-Or symlink: `ln -s ../lamp lamp` then `npm run dev`.
+If `lamp/` is missing, `ensure-lamp` auto-detects a sibling checkout at `../lamp` (e.g. `prototypes/lamp` next to `prototypes/lamp-desktop`) and **stages** it into `lamp/` for installers. Re-run is skipped until the source path changes.
+
+Optional: `ln -s ../lamp lamp` for dev only (build still stages a full copy).
 
 ## Build installers
 

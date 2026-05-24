@@ -1,6 +1,6 @@
 {
   "name": "lamp-desktop",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Desktop launcher for Lamp AI — macOS, Windows, Linux",
   "author": "thebreadcat",
   "license": "SEE LICENSE IN LICENSE",
@@ -8,12 +8,15 @@
   "main": "electron/main.js",
   "scripts": {
     "ensure-lamp": "python3 scripts/ensure-lamp.py",
+    "icons": "bash scripts/generate-icons.sh",
+    "bundle-python": "node scripts/bundle-python.mjs",
+    "predist": "npm run ensure-lamp && npm run icons && npm run bundle-python",
     "dev": "node scripts/dev.mjs",
     "start": "electron .",
-    "build": "npm run ensure-lamp && electron-builder",
-    "build:mac": "npm run ensure-lamp && electron-builder --mac",
-    "build:win": "npm run ensure-lamp && electron-builder --win",
-    "build:linux": "npm run ensure-lamp && electron-builder --linux",
+    "build": "npm run predist && electron-builder",
+    "build:mac": "npm run predist && electron-builder --mac",
+    "build:win": "npm run predist && electron-builder --win",
+    "build:linux": "npm run predist && electron-builder --linux",
     "pack": "electron-builder --dir"
   },
   "devDependencies": {
@@ -30,6 +33,7 @@
     "files": [
       "electron/**/*",
       "scripts/**/*",
+      "setup/**/*",
       "package.json"
     ],
     "extraResources": [
@@ -41,6 +45,11 @@
           "!**/.git/**",
           "!**/.git"
         ]
+      },
+      {
+        "from": "resources/python",
+        "to": "python",
+        "filter": ["**/*"]
       }
     ],
     "mac": {
@@ -62,7 +71,7 @@
       "allowToChangeInstallationDirectory": true
     },
     "deb": {
-      "depends": ["python3 (>= 3.10)"]
+      "depends": []
     }
   }
 }
