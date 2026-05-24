@@ -55,7 +55,10 @@
     "mac": {
       "category": "public.app-category.productivity",
       "target": ["dmg", "zip"],
-      "icon": "build/icon.icns"
+      "icon": "build/icon.icns",
+      "identity": "-",
+      "gatekeeperAssess": false,
+      "hardenedRuntime": false
     },
     "win": {
       "target": ["nsis"],

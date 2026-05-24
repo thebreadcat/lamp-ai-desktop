@@ -1,118 +1,82 @@
 # Lamp Desktop
 
-Cross-platform desktop launcher for [Lamp](https://github.com/thebreadcat/lamp) — starts the local Lamp server, opens the UI in a native window, and packages installers for **macOS**, **Windows**, and **Linux**.
+**Lamp Desktop** is the Mac and PC app for [Lamp](https://github.com/thebreadcat/lamp) — a private, local-first AI assistant for your home. It runs entirely on your computer: your chats, apps, and data stay on your machine.
 
-Lamp itself lives in a separate repo. This project vendors it as a **git submodule** at `lamp/` and bundles it into release builds.
+This repo is the **desktop shell** (installer, setup, and window). The Lamp experience itself is the same PWA you’d run in a browser — calendar, chat, mini-apps, family accounts — packaged so it feels like a normal app.
 
-## Architecture
+## What you get
 
-```
-┌─────────────────────────────────────┐
-│  Lamp Desktop (Electron shell)      │
-│  • window / tray                    │
-│  • spawns & monitors Python server  │
-└──────────────┬──────────────────────┘
-               │ http://127.0.0.1:7700
-┌──────────────▼──────────────────────┐
-│  lamp/  (git submodule)             │
-│  python3 lamp.py                    │
-└─────────────────────────────────────┘
-```
+- **One app icon** — open Lamp from the dock or Start menu  
+- **Automatic first-time setup** — checks your Mac/PC, installs Ollama if needed, downloads an AI model that fits your RAM, and connects everything  
+- **Menu bar / tray** — Lamp keeps running in the background; quit from the tray when you’re done  
+- **No cloud account required** — works offline on your LAN once setup finishes (you still choose your own local AI via Ollama)
 
-### One-time automatic setup
+Lamp Desktop does **not** replace the [Lamp](https://github.com/thebreadcat/lamp) project; it wraps it for people who don’t want to use Terminal or `python3 lamp.py`.
 
-On first launch, Lamp shows a **single progress screen** and installs everything automatically — no buttons to click:
+## Download
 
-1. **Python** — bundled inside release builds (`npm run bundle-python`); dev uses system `python3`
-2. **Tortoise** — included in the packaged Lamp tree at build time
-3. **Ollama** — installed via official script (Mac/Linux) or winget (Windows), with retries
-4. **AI model** — downloads the best fit for your RAM (`qwen2.5:7b` / `3b` / `1.5b`), or uses one you already have
-5. **Config** — writes `~/.workshop/config.json` wired to Ollama
-6. **Voice** — Whisper/ffmpeg install **in the background** after Lamp opens (optional)
+Installers for **macOS**, **Windows**, and **Linux**:
 
-If something can't be automated (rare), you'll see one clear message and a **Try again** button. **Run setup again…** in the tray menu re-runs the pipeline.
+**[github.com/thebreadcat/lamp-ai-desktop/releases](https://github.com/thebreadcat/lamp-ai-desktop/releases)**
 
-**Release builds** (`npm run build:mac` etc.) bundle Python + Lamp + Tortoise so users don't install those separately. They still need Ollama (installed automatically on first run when possible).
-
-## Publishing this repo (first time)
-
-```bash
-cd lamp-desktop
-git init
-git submodule add https://github.com/thebreadcat/lamp.git lamp
-git add .
-git commit -m "Initial lamp-desktop launcher"
-git remote add origin git@github.com:thebreadcat/lamp-desktop.git
-git push -u origin main
-```
-
-If the Lamp repo is private, use SSH for the submodule URL in `.gitmodules`.
-
-## Quick start (development)
-
-```bash
-git clone --recurse-submodules https://github.com/thebreadcat/lamp-desktop.git
-cd lamp-desktop
-./scripts/ensure-lamp.sh
-npm install
-npm run dev
-```
-
-**Without submodule** (sibling checkout or monorepo layout):
-
-```bash
-export LAMP_PATH=/path/to/lamp   # folder that contains lamp.py
-npm install
-npm run dev
-```
-
-If `lamp/` is missing, `ensure-lamp` auto-detects a sibling checkout at `../lamp` (e.g. `prototypes/lamp` next to `prototypes/lamp-desktop`) and **stages** it into `lamp/` for installers. Re-run is skipped until the source path changes.
-
-Optional: `ln -s ../lamp lamp` for dev only (build still stages a full copy).
-
-## Download (releases)
-
-Pre-built installers: **[github.com/thebreadcat/lamp-ai-desktop/releases](https://github.com/thebreadcat/lamp-ai-desktop/releases)**
-
-| Platform | File |
-|----------|------|
-| macOS (Apple Silicon) | `Lamp-*-arm64.dmg` |
-| macOS | `Lamp-*-mac.zip` |
+| Platform | Installer |
+|----------|-----------|
+| Mac (Apple Silicon) | `Lamp-*-arm64.dmg` |
+| Mac | `Lamp-*-mac.zip` |
 | Windows | `Lamp Setup *.exe` |
-| Linux | `Lamp-*.AppImage` or `.deb` |
+| Linux | `.AppImage` or `.deb` |
 
-First launch runs automatic setup (Ollama + AI model). Allow a few minutes on first run.
+### First launch
 
-## Build installers
+1. Install and open **Lamp**.  
+2. A short setup screen runs once (installing Ollama and downloading an AI model can take **5–20 minutes** on first run).  
+3. Create your account in the app and start chatting.
 
-Requires Node 20+ and platform tools (see [Electron Builder](https://www.electron.build/multi-platform-build)):
+Your data lives in the usual Lamp places: `~/.workshop/` (settings and database) and `~/workshop-apps/` (built apps). Reinstalling the desktop app does not delete them.
 
-| Platform | Command | Output |
-|----------|---------|--------|
-| macOS | `npm run build:mac` | `dist/Lamp-*.dmg` |
-| Windows | `npm run build:win` | `dist/Lamp-*-setup.exe` |
-| Linux | `npm run build:linux` | `dist/Lamp-*.AppImage`, `dist/*.deb` |
+## macOS: “damaged” or “can’t be opened”
 
-CI: `.github/workflows/release.yml` builds all three on tag push.
+**The download is almost certainly not broken.** Test builds are **not signed** with an Apple Developer certificate yet, so macOS Gatekeeper often blocks them and shows **“damaged”** or **“can’t be opened”** — especially right after downloading from GitHub.
 
-## Repo layout
+Try this:
 
-| Path | Purpose |
-|------|---------|
-| `lamp/` | Git submodule → [thebreadcat/lamp](https://github.com/thebreadcat/lamp) |
-| `electron/` | Main process, tray, window |
-| `scripts/ensure-lamp.py` | Submodule, Tortoise, preflight |
-| `scripts/ensure-lamp.sh` | Shell wrapper for ensure script |
+1. **Remove the quarantine flag** (Terminal):
 
-## Configuration
+   ```bash
+   xattr -cr ~/Downloads/Lamp-*.dmg
+   ```
 
-| Variable | Purpose |
-|----------|---------|
-| `LAMP_PATH` | Override path to Lamp repo (dev) |
-| `LAMP_PYTHON` | Python executable (default `python3`) |
-| `LAMP_PORT` | HTTP port (default `7700`) |
+   Then open the DMG again and drag **Lamp** to Applications.
 
-User data stays in `~/.workshop/` (Lamp’s normal paths).
+2. If the **app** still won’t open after installing:
+
+   ```bash
+   xattr -cr /Applications/Lamp.app
+   ```
+
+3. Or: **Right-click** `Lamp.app` → **Open** → **Open** again (confirms you trust the app once).
+
+We’ll add proper Apple signing and notarization in a future release so this step goes away. If problems persist after `xattr`, [open an issue](https://github.com/thebreadcat/lamp-ai-desktop/issues) with your macOS version.
+
+## Windows & Linux notes
+
+- **Windows:** SmartScreen may warn on first run; choose “More info” → “Run anyway” for unsigned test builds.  
+- **Linux:** AppImage may need `chmod +x`; `.deb` installs like any other package.
+
+## Requirements
+
+- **macOS 12+** (Apple Silicon builds are arm64; Intel Macs need an x64 build when we publish one)  
+- **Windows 10+** or **Linux** (64-bit)  
+- Internet on **first setup only** (Ollama + model download)  
+- Enough disk space for an AI model (roughly **2–5 GB** depending on model)
+
+## Privacy
+
+Setup and chat run **locally**. Lamp Desktop installs [Ollama](https://ollama.com) on your machine to run models; it does not send your conversations to Lamp’s servers (there are none for chat).
+
+## For developers
+
+Building from source, CI, and release process: **[DEVELOPING.md](DEVELOPING.md)**
 
 ## License
 

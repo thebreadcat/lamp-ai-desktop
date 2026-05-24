@@ -39,7 +39,9 @@ Outputs in `dist/`:
 
 ## CI secrets
 
-No secrets required for unsigned builds. For signed macOS/Windows, add certificates later.
+No secrets required for unsigned/ad-hoc builds. **macOS testers** may see “damaged” until we add Apple Developer signing + notarization — not a bad upload; see README troubleshooting (`xattr -cr`).
+
+For production: `CSC_LINK` / Apple notarize credentials in GitHub secrets.
 
 ## Test the artifact
 
