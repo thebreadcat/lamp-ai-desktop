@@ -5,9 +5,14 @@
 Edit `version` in `package.json`, then tag:
 
 ```bash
-git tag v0.2.0
-git push origin main --tags
+git push origin main
+git tag v0.2.0   # if not already tagged
+git push origin v0.2.0
 ```
+
+Pushing tag `v*` triggers [.github/workflows/release.yml](.github/workflows/release.yml) on GitHub Actions (all three OSes).
+
+**Local mac build already done?** After CI finishes, upload `dist/Lamp-0.2.0-arm64.dmg` to the release if you built before CI, or rely on the macOS job artifact.
 
 GitHub Actions builds **macOS**, **Windows**, and **Linux** and attaches installers to the GitHub Release.
 

@@ -70,6 +70,19 @@ If `lamp/` is missing, `ensure-lamp` auto-detects a sibling checkout at `../lamp
 
 Optional: `ln -s ../lamp lamp` for dev only (build still stages a full copy).
 
+## Download (releases)
+
+Pre-built installers: **[github.com/thebreadcat/lamp-ai-desktop/releases](https://github.com/thebreadcat/lamp-ai-desktop/releases)**
+
+| Platform | File |
+|----------|------|
+| macOS (Apple Silicon) | `Lamp-*-arm64.dmg` |
+| macOS | `Lamp-*-mac.zip` |
+| Windows | `Lamp Setup *.exe` |
+| Linux | `Lamp-*.AppImage` or `.deb` |
+
+First launch runs automatic setup (Ollama + AI model). Allow a few minutes on first run.
+
 ## Build installers
 
 Requires Node 20+ and platform tools (see [Electron Builder](https://www.electron.build/multi-platform-build)):
