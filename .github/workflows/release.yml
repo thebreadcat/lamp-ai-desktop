@@ -55,10 +55,10 @@ jobs:
 
       - name: Prepare Lamp + icons
         env:
-          LAMP_REPO: https://github.com/thebreadcat/lamp.git
+          LAMP_REPO: https://github.com/thebreadcat/lamp-ai.git
         run: |
           python3 scripts/ensure-lamp.py
-          bash scripts/generate-icons.sh || true
+          bash scripts/generate-icons.sh
 
       - name: Bundle embedded Python
         run: node scripts/bundle-python.mjs

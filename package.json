@@ -1,8 +1,8 @@
 {
   "name": "lamp-desktop",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Desktop launcher for Lamp AI — macOS, Windows, Linux",
-  "author": "thebreadcat",
+  "author": "thebreadcat <brockmcblockchain@gmail.com>",
   "license": "SEE LICENSE IN LICENSE",
   "private": true,
   "main": "electron/main.js",
@@ -49,6 +49,19 @@
       {
         "from": "resources/python",
         "to": "python",
+        "filter": ["**/*"]
+      },
+      {
+        "from": "build/icon.png",
+        "to": "app-icon.png"
+      },
+      {
+        "from": "build/icon.ico",
+        "to": "icon.ico"
+      },
+      {
+        "from": "build/icons",
+        "to": "icons",
         "filter": ["**/*"]
       }
     ],

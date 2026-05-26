@@ -7,6 +7,7 @@ const {
   nativeImage,
 } = require("electron");
 const path = require("node:path");
+const { loadIcon } = require("./app-icon");
 const { LampServer } = require("./lamp-server");
 const { SetupManager } = require("./setup-manager");
 const { runSetupWindow } = require("./setup-window");
@@ -29,20 +30,8 @@ if (!gotLock) {
   });
 }
 
-function iconPath() {
-  const base = path.join(__dirname, "..", "build");
-  if (process.platform === "darwin") {
-    const icns = path.join(base, "icon.icns");
-    if (require("node:fs").existsSync(icns)) return icns;
-  }
-  const png = path.join(base, "icon.png");
-  return require("node:fs").existsSync(png) ? png : undefined;
-}
-
 function buildTray() {
-  const img = iconPath()
-    ? nativeImage.createFromPath(iconPath())
-    : nativeImage.createEmpty();
+  const img = loadIcon({ tray: true });
   tray = new Tray(
     img.isEmpty()
       ? nativeImage.createFromDataURL(
@@ -95,12 +84,14 @@ function buildTray() {
 
 async function createMainWindow() {
   const url = await lamp.start();
+  const icon = loadIcon();
   mainWindow = new BrowserWindow({
     width: 1280,
     height: 840,
     minWidth: 900,
     minHeight: 600,
     title: "Lamp",
+    icon: icon.isEmpty() ? undefined : icon,
     backgroundColor: "#0f0f12",
     webPreferences: {
       nodeIntegration: false,
@@ -130,6 +121,10 @@ async function createMainWindow() {
 }
 
 app.whenReady().then(async () => {
+  if (process.platform === "darwin") {
+    const dockIcon = loadIcon();
+    if (!dockIcon.isEmpty()) app.dock.setIcon(dockIcon);
+  }
   buildTray();
   try {
     if (await setup.needsWizard()) {

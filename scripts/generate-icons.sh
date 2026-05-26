@@ -27,12 +27,19 @@ if command -v magick >/dev/null; then
     magick "$PNG" -resize "${size}x${size}" "$ICONSET/icon_${size}x${size}.png"
     magick "$PNG" -resize "${size}x${size}" "$ICONSET/icon_${size}x${size}@2x.png"
   done
-  iconutil -c icns "$ICONSET" -o "$ICNS" 2>/dev/null || true
+  if [[ "$(uname -s)" == "Darwin" ]]; then
+    if ! iconutil -c icns "$ICONSET" -o "$ICNS"; then
+      echo "error: iconutil failed — macOS builds need build/icon.icns" >&2
+      exit 1
+    fi
+  elif [[ ! -f "$ICNS" ]]; then
+    echo "warn: icon.icns not generated (iconutil is macOS-only); commit or copy one for Mac releases" >&2
+  fi
   mkdir -p "$ICONS"
   for size in 16 32 48 64 128 256 512; do
     magick "$PNG" -resize "${size}x${size}" "$ICONS/${size}x${size}.png"
   done
-  echo "Icons: $ICO $ICNS $ICONS/"
+  echo "Icons: $ICO ${ICNS:-'(no .icns on this OS)'} $ICONS/"
 else
   echo "warn: ImageMagick not found — Windows/Linux builds may need icon.ico manually" >&2
 fi

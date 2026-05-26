@@ -13,7 +13,7 @@ ROOT = Path(__file__).resolve().parents[1]
 LAMP_DIR = ROOT / "lamp"
 STAGE_STAMP = LAMP_DIR / ".desktop-stage-source"
 TORTOISE_URL = "https://github.com/thebreadcat/tortoise.git"
-LAMP_REPO = os.environ.get("LAMP_REPO", "https://github.com/thebreadcat/lamp.git")
+LAMP_REPO = os.environ.get("LAMP_REPO", "https://github.com/thebreadcat/lamp-ai.git")
 
 IGNORE_NAMES = {
     ".git",
@@ -71,7 +71,19 @@ def clone_lamp_repo() -> Path | None:
     print(f"Cloning Lamp from {LAMP_REPO}", flush=True)
     if LAMP_DIR.exists():
         shutil.rmtree(LAMP_DIR)
-    code, _ = run(["git", "clone", "--depth", "1", LAMP_REPO, str(LAMP_DIR)], check=False)
+    code, _ = run(
+        [
+            "git",
+            "clone",
+            "--depth",
+            "1",
+            "--recurse-submodules",
+            "--shallow-submodules",
+            LAMP_REPO,
+            str(LAMP_DIR),
+        ],
+        check=False,
+    )
     if code != 0 or not is_lamp_dir(LAMP_DIR):
         return None
     return LAMP_DIR.resolve()

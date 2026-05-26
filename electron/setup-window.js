@@ -1,16 +1,19 @@
 const { BrowserWindow, ipcMain } = require("electron");
 const path = require("node:path");
+const { loadIcon } = require("./app-icon");
 
 function runSetupWindow(setupManager) {
   return new Promise((resolve) => {
     const url = `${setupManager.baseUrl}/`;
 
+    const icon = loadIcon();
     const win = new BrowserWindow({
       width: 560,
       height: 720,
       minWidth: 480,
       minHeight: 600,
       title: "Set up Lamp",
+      icon: icon.isEmpty() ? undefined : icon,
       backgroundColor: "#0f0f12",
       resizable: true,
       webPreferences: {
