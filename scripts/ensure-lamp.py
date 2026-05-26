@@ -71,7 +71,7 @@ def clone_lamp_repo() -> Path | None:
     print(f"Cloning Lamp from {LAMP_REPO}", flush=True)
     if LAMP_DIR.exists():
         shutil.rmtree(LAMP_DIR)
-    code, _ = run(
+    result = run(
         [
             "git",
             "clone",
@@ -84,7 +84,7 @@ def clone_lamp_repo() -> Path | None:
         ],
         check=False,
     )
-    if code != 0 or not is_lamp_dir(LAMP_DIR):
+    if result.returncode != 0 or not is_lamp_dir(LAMP_DIR):
         return None
     return LAMP_DIR.resolve()
 
