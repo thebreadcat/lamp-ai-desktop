@@ -51,7 +51,7 @@ jobs:
           fi
 
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --include=optional
 
       - name: Prepare Lamp + icons
         env:
