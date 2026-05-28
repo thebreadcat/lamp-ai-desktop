@@ -24,10 +24,7 @@ if (!gotLock) {
   app.quit();
 } else {
   app.on("second-instance", () => {
-    if (mainWindow) {
-      if (mainWindow.isMinimized()) mainWindow.restore();
-      mainWindow.focus();
-    }
+    showMainWindow().catch((e) => console.error("[lamp] open failed:", e));
   });
 }
 
@@ -43,8 +40,27 @@ function buildTray() {
   tray.setToolTip("Lamp");
   updateTrayMenu();
   tray.on("double-click", () => {
-    if (mainWindow) mainWindow.show();
+    showMainWindow().catch((e) => console.error("[lamp] open failed:", e));
   });
+}
+
+function closeOrphanMainWindows() {
+  for (const win of BrowserWindow.getAllWindows()) {
+    if (win === mainWindow || win.isDestroyed()) continue;
+    if (win.getTitle() === "Set up Lamp") continue;
+    win.destroy();
+  }
+}
+
+async function showMainWindow() {
+  const url = await lamp.start();
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    await mainWindow.loadURL(url);
+    mainWindow.show();
+    mainWindow.focus();
+    return mainWindow;
+  }
+  return createMainWindow();
 }
 
 function updateStatusLabel() {
@@ -64,8 +80,7 @@ function updateTrayMenu() {
       {
         label: "Open Lamp",
         click: () => {
-          if (mainWindow) mainWindow.show();
-          else createMainWindow();
+          showMainWindow().catch((e) => console.error("[lamp] open failed:", e));
         },
       },
       {
@@ -106,6 +121,11 @@ function updateTrayMenu() {
 }
 
 async function createMainWindow() {
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    return showMainWindow();
+  }
+  closeOrphanMainWindows();
+
   const url = await lamp.start();
   const icon = loadIcon();
   mainWindow = new BrowserWindow({
@@ -160,8 +180,7 @@ app.whenReady().then(async () => {
   await createMainWindow();
   updater.startPeriodicChecks();
   app.on("activate", () => {
-    if (BrowserWindow.getAllWindows().length === 0) createMainWindow();
-    else if (mainWindow) mainWindow.show();
+    showMainWindow().catch((e) => console.error("[lamp] open failed:", e));
   });
 });
 
