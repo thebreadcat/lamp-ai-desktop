@@ -6,17 +6,18 @@ const {
   shell,
   nativeImage,
 } = require("electron");
-const path = require("node:path");
 const { loadIcon } = require("./app-icon");
 const { LampServer } = require("./lamp-server");
 const { SetupManager } = require("./setup-manager");
 const { runSetupWindow } = require("./setup-window");
+const { createUpdater } = require("./updater");
 
 let mainWindow = null;
 let tray = null;
 let quitting = false;
 const lamp = new LampServer(app);
 const setup = new SetupManager(app);
+let updater = null;
 
 const gotLock = app.requestSingleInstanceLock();
 if (!gotLock) {
@@ -40,6 +41,24 @@ function buildTray() {
       : img
   );
   tray.setToolTip("Lamp");
+  updateTrayMenu();
+  tray.on("double-click", () => {
+    if (mainWindow) mainWindow.show();
+  });
+}
+
+function updateStatusLabel() {
+  if (!updater) return "Check for updates…";
+  if (updater.state.downloading) {
+    return `Downloading update… ${updater.state.progressPercent}%`;
+  }
+  if (updater.state.checking) return "Checking for updates…";
+  if (updater.state.updateReady) return "Update ready — restart to install";
+  return "Check for updates…";
+}
+
+function updateTrayMenu() {
+  if (!tray) return;
   tray.setContextMenu(
     Menu.buildFromTemplate([
       {
@@ -57,6 +76,13 @@ function buildTray() {
         },
       },
       { type: "separator" },
+      {
+        label: updateStatusLabel(),
+        enabled: updater ? !updater.state.checking : true,
+        click: async () => {
+          if (updater) await updater.checkForUpdates({ manual: true });
+        },
+      },
       {
         label: "Run setup again…",
         click: async () => {
@@ -77,9 +103,6 @@ function buildTray() {
       },
     ])
   );
-  tray.on("double-click", () => {
-    if (mainWindow) mainWindow.show();
-  });
 }
 
 async function createMainWindow() {
@@ -125,6 +148,7 @@ app.whenReady().then(async () => {
     const dockIcon = loadIcon();
     if (!dockIcon.isEmpty()) app.dock.setIcon(dockIcon);
   }
+  updater = createUpdater({ onStateChange: updateTrayMenu });
   buildTray();
   try {
     if (await setup.needsWizard()) {
@@ -134,6 +158,7 @@ app.whenReady().then(async () => {
     console.error("[setup] wizard failed:", e);
   }
   await createMainWindow();
+  updater.startPeriodicChecks();
   app.on("activate", () => {
     if (BrowserWindow.getAllWindows().length === 0) createMainWindow();
     else if (mainWindow) mainWindow.show();
@@ -148,4 +173,5 @@ app.on("before-quit", () => {
   quitting = true;
   lamp.stop();
   setup.stop();
+  if (updater) updater.stop();
 });

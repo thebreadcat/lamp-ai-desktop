@@ -30,11 +30,22 @@ function platformKey() {
   throw new Error(`Unsupported platform: ${platform} ${arch}`);
 }
 
+function githubHeaders() {
+  const token = process.env.GH_TOKEN || process.env.GITHUB_TOKEN;
+  const headers = {
+    "User-Agent": "lamp-desktop-build",
+    Accept: "application/vnd.github+json",
+  };
+  if (token) headers.Authorization = `Bearer ${token}`;
+  return headers;
+}
+
 async function fetchJson(url) {
-  const res = await fetch(url, {
-    headers: { "User-Agent": "lamp-desktop-build" },
-  });
-  if (!res.ok) throw new Error(`HTTP ${res.status} ${url}`);
+  const res = await fetch(url, { headers: githubHeaders() });
+  if (!res.ok) {
+    const body = await res.text().catch(() => "");
+    throw new Error(`HTTP ${res.status} ${url}${body ? ` :: ${body}` : ""}`);
+  }
   return res.json();
 }
 
@@ -58,11 +69,8 @@ function pickAsset(assets, triple) {
 async function main() {
   const key = platformKey();
   const triple = TRIPLES[key];
-  const tag = process.env.PYTHON_STANDALONE_TAG || (await fetchJson(
-    "https://api.github.com/repos/astral-sh/python-build-standalone/releases/latest"
-  )).tag_name;
-
-  const release = process.env.PYTHON_STANDALONE_TAG
+  const tag = process.env.PYTHON_STANDALONE_TAG;
+  const release = tag
     ? await fetchJson(
         `https://api.github.com/repos/astral-sh/python-build-standalone/releases/tags/${tag}`
       )

@@ -24,7 +24,8 @@
     "electron-builder": "^26.8.1"
   },
   "optionalDependencies": {
-    "electron-builder-squirrel-windows": "^26.8.1"
+    "electron-builder-squirrel-windows": "^26.8.1",
+    "electron-updater": "^6.6.2"
   },
   "build": {
     "appId": "ai.lamp.desktop",
@@ -103,6 +104,19 @@
     },
     "deb": {
       "depends": []
-    }
-  }
+    },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "thebreadcat",
+        "repo": "lamp-ai-desktop"
+      }
+    ],
+    "electronUpdaterCompatibility": ">=2.16"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/thebreadcat/lamp-ai-desktop.git"
+  },
+  "homepage": "https://github.com/thebreadcat/lamp-ai-desktop"
 }
