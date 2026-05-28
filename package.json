@@ -1,6 +1,6 @@
 {
   "name": "lamp-desktop",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Desktop launcher for Lamp AI — macOS, Windows, Linux",
   "author": "thebreadcat <brockmcblockchain@gmail.com>",
   "license": "SEE LICENSE IN LICENSE",
@@ -20,11 +20,11 @@
     "pack": "electron-builder --dir"
   },
   "devDependencies": {
-    "electron": "^35.0.0",
-    "electron-builder": "^25.1.8"
+    "electron": "^42.3.0",
+    "electron-builder": "^26.8.1"
   },
   "optionalDependencies": {
-    "electron-builder-squirrel-windows": "^25.1.8"
+    "electron-builder-squirrel-windows": "^26.8.1"
   },
   "build": {
     "appId": "ai.lamp.desktop",
@@ -52,7 +52,9 @@
       {
         "from": "resources/python",
         "to": "python",
-        "filter": ["**/*"]
+        "filter": [
+          "**/*"
+        ]
       },
       {
         "from": "build/icon.png",
@@ -65,23 +67,33 @@
       {
         "from": "build/icons",
         "to": "icons",
-        "filter": ["**/*"]
+        "filter": [
+          "**/*"
+        ]
       }
     ],
     "mac": {
       "category": "public.app-category.productivity",
-      "target": ["dmg", "zip"],
+      "target": [
+        "dmg",
+        "zip"
+      ],
       "icon": "build/icon.icns",
       "identity": "-",
       "gatekeeperAssess": false,
       "hardenedRuntime": false
     },
     "win": {
-      "target": ["nsis"],
+      "target": [
+        "nsis"
+      ],
       "icon": "build/icon.ico"
     },
     "linux": {
-      "target": ["AppImage", "deb"],
+      "target": [
+        "AppImage",
+        "deb"
+      ],
       "category": "Utility",
       "icon": "build/icons"
     },
