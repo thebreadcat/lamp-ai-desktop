@@ -5,12 +5,14 @@ const {
   Menu,
   shell,
   nativeImage,
+  dialog,
 } = require("electron");
 const { loadIcon } = require("./app-icon");
 const { LampServer } = require("./lamp-server");
 const { SetupManager } = require("./setup-manager");
 const { runSetupWindow } = require("./setup-window");
 const { createUpdater } = require("./updater");
+const { formatAboutDetail } = require("./build-info");
 
 let mainWindow = null;
 let tray = null;
@@ -91,6 +93,21 @@ function updateTrayMenu() {
         },
       },
       { type: "separator" },
+      {
+        label: `Lamp ${app.getVersion()}`,
+        enabled: false,
+      },
+      {
+        label: "About Lamp…",
+        click: async () => {
+          await dialog.showMessageBox({
+            type: "info",
+            title: "About Lamp",
+            message: `Lamp ${app.getVersion()}`,
+            detail: formatAboutDetail(),
+          });
+        },
+      },
       {
         label: updateStatusLabel(),
         enabled: updater ? !updater.state.checking : true,

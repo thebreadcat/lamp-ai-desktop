@@ -1,6 +1,6 @@
 {
   "name": "lamp-desktop",
-  "version": "0.2.2",
+  "version": "0.2.4",
   "description": "Desktop launcher for Lamp AI — macOS, Windows, Linux",
   "author": "thebreadcat <brockmcblockchain@gmail.com>",
   "license": "SEE LICENSE IN LICENSE",
@@ -10,7 +10,8 @@
     "ensure-lamp": "python3 scripts/ensure-lamp.py",
     "icons": "bash scripts/generate-icons.sh",
     "bundle-python": "node scripts/bundle-python.mjs",
-    "predist": "npm run ensure-lamp && npm run icons && npm run bundle-python",
+    "write-build-info": "node scripts/write-build-info.mjs",
+    "predist": "npm run ensure-lamp && npm run icons && npm run bundle-python && npm run write-build-info",
     "dev": "node scripts/dev.mjs",
     "start": "electron .",
     "build": "npm run predist && electron-builder",
@@ -19,13 +20,15 @@
     "build:linux": "npm run predist && electron-builder --linux",
     "pack": "electron-builder --dir"
   },
+  "dependencies": {
+    "electron-updater": "^6.6.2"
+  },
   "devDependencies": {
     "electron": "^42.3.0",
     "electron-builder": "^26.8.1"
   },
   "optionalDependencies": {
-    "electron-builder-squirrel-windows": "^26.8.1",
-    "electron-updater": "^6.6.2"
+    "electron-builder-squirrel-windows": "^26.8.1"
   },
   "build": {
     "appId": "ai.lamp.desktop",
@@ -71,6 +74,10 @@
         "filter": [
           "**/*"
         ]
+      },
+      {
+        "from": "resources/build-info.json",
+        "to": "build-info.json"
       }
     ],
     "mac": {

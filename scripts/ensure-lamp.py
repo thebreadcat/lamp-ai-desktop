@@ -3,10 +3,12 @@
 
 from __future__ import annotations
 
+import json
 import os
 import shutil
 import subprocess
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -130,6 +132,30 @@ def stage_lamp(src: Path) -> Path:
     return LAMP_DIR
 
 
+def git_rev(repo: Path) -> str | None:
+    if not git_available() or not (repo / ".git").exists():
+        return None
+    result = run(["git", "-C", str(repo), "rev-parse", "HEAD"], check=False)
+    if result.returncode != 0:
+        return None
+    return (result.stdout or "").strip() or None
+
+
+def write_build_meta(lamp_dir: Path, src: Path) -> None:
+    tortoise = lamp_dir / "vendor" / "workshop" / "vendor" / "tortoise"
+    meta = {
+        "lampSource": str(src.resolve()),
+        "lampCommit": git_rev(src) or git_rev(lamp_dir),
+        "tortoiseCommit": git_rev(tortoise),
+        "stagedAt": datetime.now(timezone.utc).isoformat(),
+    }
+    path = lamp_dir / ".desktop-build-meta.json"
+    path.write_text(json.dumps(meta, indent=2) + "\n")
+    lamp = meta["lampCommit"] or "unknown"
+    tort = meta["tortoiseCommit"] or "unknown"
+    print(f"ok: build meta lamp={lamp[:7]} tortoise={tort[:7]}", flush=True)
+
+
 def ensure_tortoise(lamp_dir: Path) -> None:
     tortoise = lamp_dir / "vendor" / "workshop" / "vendor" / "tortoise"
     if (tortoise / ".git").exists() or (tortoise / "tortoise.py").is_file():
@@ -187,6 +213,7 @@ def main() -> None:
         )
     lamp_dir = stage_lamp(src)
     ensure_tortoise(lamp_dir)
+    write_build_meta(lamp_dir, src)
     tortoise = lamp_dir / "vendor" / "workshop" / "vendor" / "tortoise" / "tortoise.py"
     if not tortoise.is_file():
         sys.exit(
