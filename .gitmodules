@@ -1,4 +1,4 @@
 [submodule "lamp"]
 	path = lamp
-	url = https://github.com/thebreadcat/lamp.git
+	url = https://github.com/thebreadcat/lamp-ai.git
 	branch = main

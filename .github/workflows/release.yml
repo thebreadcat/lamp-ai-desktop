@@ -69,8 +69,11 @@ jobs:
       - name: Prepare Lamp + icons
         env:
           LAMP_REPO: https://github.com/thebreadcat/lamp-ai.git
+          LAMP_REF: main
+          LAMP_SKIP_SUBMODULE: "1"
         run: |
           python3 scripts/ensure-lamp.py
+          test -f lamp/assets/fontawesome/css/all.min.css
           bash scripts/generate-icons.sh
 
       - name: Bundle embedded Python
@@ -82,7 +85,8 @@ jobs:
         run: node scripts/write-build-info.mjs
 
       - name: Build installer
-        run: ${{ matrix.cmd }}
+        # -p never: CI uploads via the release job; avoid electron-builder draft releases on GitHub
+        run: ${{ matrix.cmd }} -- -p never
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CSC_IDENTITY_AUTO_DISCOVERY: "false"

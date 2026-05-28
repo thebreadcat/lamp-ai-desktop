@@ -5,14 +5,18 @@ const {
   Menu,
   shell,
   nativeImage,
-  dialog,
 } = require("electron");
 const { loadIcon } = require("./app-icon");
 const { LampServer } = require("./lamp-server");
 const { SetupManager } = require("./setup-manager");
 const { runSetupWindow } = require("./setup-window");
 const { createUpdater } = require("./updater");
-const { formatAboutDetail } = require("./build-info");
+const {
+  configureAboutPanel,
+  showAboutDialog,
+  installApplicationMenu,
+  refreshApplicationMenu,
+} = require("./app-menu");
 
 let mainWindow = null;
 let tray = null;
@@ -99,13 +103,8 @@ function updateTrayMenu() {
       },
       {
         label: "About Lamp…",
-        click: async () => {
-          await dialog.showMessageBox({
-            type: "info",
-            title: "About Lamp",
-            message: `Lamp ${app.getVersion()}`,
-            detail: formatAboutDetail(),
-          });
+        click: () => {
+          showAboutDialog().catch((e) => console.error("[tray] about failed:", e));
         },
       },
       {
@@ -180,12 +179,19 @@ async function createMainWindow() {
   });
 }
 
+function onUpdaterStateChange() {
+  updateTrayMenu();
+  refreshApplicationMenu({ getUpdater: () => updater });
+}
+
 app.whenReady().then(async () => {
+  configureAboutPanel();
   if (process.platform === "darwin") {
     const dockIcon = loadIcon();
     if (!dockIcon.isEmpty()) app.dock.setIcon(dockIcon);
   }
-  updater = createUpdater({ onStateChange: updateTrayMenu });
+  updater = createUpdater({ onStateChange: onUpdaterStateChange });
+  installApplicationMenu({ getUpdater: () => updater });
   buildTray();
   try {
     if (await setup.needsWizard()) {

@@ -7,15 +7,21 @@ const { pythonBin: resolvePython } = require("./python-runtime");
 const DEFAULT_PORT = 7700;
 
 function lampRoot(app) {
+  const bundled = path.join(process.resourcesPath, "lamp");
+  // Packaged installs must use the bundled lamp-ai tree (ignore dev LAMP_PATH).
+  if (app.isPackaged) {
+    if (fs.existsSync(path.join(bundled, "lamp.py"))) return bundled;
+    throw new Error(
+      "Bundled Lamp is missing from this install. Reinstall from a current release build."
+    );
+  }
+
   const fromEnv = process.env.LAMP_PATH?.trim();
   if (fromEnv && fs.existsSync(path.join(fromEnv, "lamp.py"))) {
     return path.resolve(fromEnv);
   }
-  if (!app.isPackaged) {
-    const dev = path.join(app.getAppPath(), "lamp");
-    if (fs.existsSync(path.join(dev, "lamp.py"))) return dev;
-  }
-  const bundled = path.join(process.resourcesPath, "lamp");
+  const dev = path.join(app.getAppPath(), "lamp");
+  if (fs.existsSync(path.join(dev, "lamp.py"))) return dev;
   if (fs.existsSync(path.join(bundled, "lamp.py"))) return bundled;
   throw new Error(
     "Lamp not found. Set LAMP_PATH or run: git submodule update --init --recursive"

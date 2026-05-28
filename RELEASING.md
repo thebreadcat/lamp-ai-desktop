@@ -1,5 +1,17 @@
 # Releasing Lamp Desktop
 
+## Do you build locally first?
+
+**No.** The normal flow is:
+
+1. Bump `package.json` and commit desktop changes on `main`
+2. Push `main`, then push tag `v0.2.5` (must match `package.json`)
+3. **GitHub Actions builds** macOS / Windows / Linux and attaches installers to the release
+
+You only run `npm run build:mac` locally when **testing** before you tag. The DMG users download comes from CI, not from your laptop (unless you upload one manually).
+
+Wait until the [Release workflow](https://github.com/thebreadcat/lamp-ai-desktop/actions) is green and the release is **published** (not Draft) before downloading.
+
 ## Release checklist
 
 1. **Pull latest Lamp** (includes MemoMind, Workshop, and whatever is on `lamp-ai` main):
@@ -34,12 +46,23 @@ The `v0.2.3` tag was pushed while `package.json` still said `0.2.2`, so the buil
 | Component | Source |
 |-----------|--------|
 | Desktop shell | This repo (`package.json` version) |
-| Lamp UI + server | `lamp-ai` at build time (`ensure-lamp.py`) |
+| Lamp UI + server | `lamp-ai` **main** at CI build time (`ensure-lamp.py`) |
 | Tortoise | Cloned into `lamp/vendor/workshop/vendor/tortoise` |
 | MemoMind | Shipped inside Lamp (`lamp-ai`); not a separate desktop pin |
+| Font Awesome / CSS | `lamp/assets/fontawesome/` (verified before packaging) |
 | Embedded Python | `bundle-python.mjs` (python-build-standalone 3.12) |
 
+Pin a specific Lamp commit for a release: set `LAMP_REF` in the release workflow (defaults to `main`).
+
 Build metadata is written to `resources/build-info.json` and shown in **About Lamp…**.
+
+### Mind menu not visible?
+
+Mind is in the mobile flyout but **hidden until MemoMind is enabled** for your account (same as web Lamp). Set up MemoMind in Lamp settings first; then **Mind** appears in the nav flyout.
+
+### `all.min.css` or `/api/voice/status` 404?
+
+Usually means the app is **not** serving the bundled `Resources/lamp` tree — often because a dev `LAMP_PATH` in your shell pointed at an old/incomplete checkout. Packaged builds now ignore `LAMP_PATH`. After installing a new build, **Quit** from the tray and reinstall. `/api/voice/status` requires you to be **logged in**; Whisper not installed is normal (mic still works, transcription may not).
 
 ## Manual build (one platform)
 

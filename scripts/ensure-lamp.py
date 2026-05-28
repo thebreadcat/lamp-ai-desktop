@@ -16,6 +16,14 @@ LAMP_DIR = ROOT / "lamp"
 STAGE_STAMP = LAMP_DIR / ".desktop-stage-source"
 TORTOISE_URL = "https://github.com/thebreadcat/tortoise.git"
 LAMP_REPO = os.environ.get("LAMP_REPO", "https://github.com/thebreadcat/lamp-ai.git")
+LAMP_REF = os.environ.get("LAMP_REF", "main").strip() or "main"
+
+REQUIRED_BUNDLE_FILES = (
+    "lamp.py",
+    "lamp.html",
+    "assets/fontawesome/css/all.min.css",
+    "vendor/workshop/workshop.py",
+)
 
 IGNORE_NAMES = {
     ".git",
@@ -55,6 +63,8 @@ def is_lamp_dir(path: Path) -> bool:
 
 
 def init_submodule() -> None:
+    if os.environ.get("LAMP_SKIP_SUBMODULE", "").strip() in ("1", "true", "yes"):
+        return
     if not git_available() or not (ROOT / ".git").exists():
         return
     if is_lamp_dir(LAMP_DIR):
@@ -62,6 +72,15 @@ def init_submodule() -> None:
     if not (ROOT / ".gitmodules").is_file():
         return
     run(["git", "submodule", "update", "--init", "--recursive"], check=False)
+
+
+def verify_lamp_bundle(lamp_dir: Path) -> bool:
+    ok = True
+    for rel in REQUIRED_BUNDLE_FILES:
+        if not (lamp_dir / rel).is_file():
+            print(f"error: lamp bundle missing required file: {rel}", file=sys.stderr)
+            ok = False
+    return ok
 
 
 def clone_lamp_repo() -> Path | None:
@@ -73,19 +92,19 @@ def clone_lamp_repo() -> Path | None:
     print(f"Cloning Lamp from {LAMP_REPO}", flush=True)
     if LAMP_DIR.exists():
         shutil.rmtree(LAMP_DIR)
-    result = run(
-        [
-            "git",
-            "clone",
-            "--depth",
-            "1",
-            "--recurse-submodules",
-            "--shallow-submodules",
-            LAMP_REPO,
-            str(LAMP_DIR),
-        ],
-        check=False,
-    )
+    clone_cmd = [
+        "git",
+        "clone",
+        "--depth",
+        "1",
+        "--branch",
+        LAMP_REF,
+        "--recurse-submodules",
+        "--shallow-submodules",
+        LAMP_REPO,
+        str(LAMP_DIR),
+    ]
+    result = run(clone_cmd, check=False)
     if result.returncode != 0 or not is_lamp_dir(LAMP_DIR):
         return None
     return LAMP_DIR.resolve()
@@ -221,9 +240,14 @@ def main() -> None:
             "  python3 scripts/ensure-lamp.py  (with network/git)\n"
             "Release builds must include Tortoise before packaging."
         )
+    if not verify_lamp_bundle(lamp_dir):
+        sys.exit(
+            "Lamp bundle is incomplete (missing assets or Workshop).\n"
+            "  rm -rf lamp && python3 scripts/ensure-lamp.py"
+        )
     run_preflight(lamp_dir)
     ensure_build_icon(lamp_dir)
-    print(f"ok: lamp ready at {lamp_dir}")
+    print(f"ok: lamp ready at {lamp_dir} (ref {LAMP_REF})")
 
 
 if __name__ == "__main__":
